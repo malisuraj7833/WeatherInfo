@@ -17,7 +17,6 @@ public class WeatherInfo {
 	private String weatherStatusDescription;
 	private String weatherImagePath;
 
-
 	public String getCityName() {
 		return cityName;
 	}

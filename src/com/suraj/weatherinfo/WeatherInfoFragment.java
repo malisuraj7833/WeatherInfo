@@ -91,18 +91,23 @@ implements OnClickListener, OnItemClickListener,MyInterface {
 	}
 
 	@Override
-	public void setweatherData(ArrayList<WeatherInfo> weatherInfoArray) {
+	public void setweatherData(ArrayList<WeatherInfo> weatherInfoArray,final String responseCode) {
+
 		this.arrayWeatherInfos = weatherInfoArray;
 		Log.d("arrayWeatherInfos", arrayWeatherInfos.toString());
 		getActivity().runOnUiThread(new Runnable() {
-			
+
 			@Override
 			public void run() {
-				drawListView(arrayWeatherInfos);
+				if(responseCode.equals("200")){
+					drawListView(arrayWeatherInfos);}
+				else{
+					showMessage("You have entered wrong city!!!");
+				}
 			}
 		});
 	}
-	
+
 	public boolean isNetworkConnected(){
 		ConnectivityManager conMgr = (ConnectivityManager)getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
 		NetworkInfo mobile_info = conMgr.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
@@ -110,7 +115,7 @@ implements OnClickListener, OnItemClickListener,MyInterface {
 		return ((mobile_info!=null && mobile_info.getState() == NetworkInfo.State.CONNECTED)
 				|| (wifi_info!=null && wifi_info.getState() == NetworkInfo.State.CONNECTED));
 	}
-	
+
 	private void showMessage(String message){
 		AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 		builder.setTitle("Error!!!");

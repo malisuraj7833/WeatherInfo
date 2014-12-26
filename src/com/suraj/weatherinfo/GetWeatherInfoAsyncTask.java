@@ -50,7 +50,6 @@ public class GetWeatherInfoAsyncTask extends AsyncTask<String, Void, String>
 	private ProgressDialog dialog;
 	private WeatherInfo weatherInfo;
 	private ArrayList<WeatherInfo> weatherInfoArrayList;
-	private Activity activity;
 	private MyInterface listener;
 
 	@Override
@@ -83,71 +82,75 @@ public class GetWeatherInfoAsyncTask extends AsyncTask<String, Void, String>
 		weatherInfoArrayList = new ArrayList<WeatherInfo>();
 		try {
 			mainJsonObject = new JSONObject(result);
-			String weatherConditionCode = mainJsonObject.optString("cod");
-			int numberOfRecords = mainJsonObject.optInt("cnt");
-			//city info
-			JSONObject cityJsonObject = mainJsonObject.optJSONObject("city");
-			String cityName = cityJsonObject.optString("name");
-			String countryName = cityJsonObject.optString("country");
-			//city coordinates
-			JSONObject cityCordinatesJsonObject = cityJsonObject.optJSONObject("coord");
-			double longitude = cityCordinatesJsonObject.optDouble("lon");
-			double lattitude = cityCordinatesJsonObject.optDouble("lat");
+			String responseCode = mainJsonObject.optString("cod");
+			if(responseCode.equals("200")){
+				int numberOfRecords = mainJsonObject.optInt("cnt");
+				//city info
+				JSONObject cityJsonObject = mainJsonObject.optJSONObject("city");
+				String cityName = cityJsonObject.optString("name");
+				String countryName = cityJsonObject.optString("country");
+				//city coordinates
+				JSONObject cityCordinatesJsonObject = cityJsonObject.optJSONObject("coord");
+				double longitude = cityCordinatesJsonObject.optDouble("lon");
+				double lattitude = cityCordinatesJsonObject.optDouble("lat");
 
-			JSONArray listOfRecordsJsonArray = mainJsonObject.optJSONArray("list");
-			int length = listOfRecordsJsonArray.length();
-			for(int i=0;i<length;i++){
-				weatherInfo = new WeatherInfo();
-				weatherInfo.setCityName(cityName);
-				weatherInfo.setLongitude(longitude);
-				weatherInfo.setLattitude(lattitude);
-				//"list" child object
-				JSONObject childListObject = listOfRecordsJsonArray.getJSONObject(i);
-				long unixTimeStamp = childListObject.optLong("dt");
-				double pressure = childListObject.optDouble("pressure");
-				int	humidity = childListObject.optInt("humidity");
-				int	windSpeed = childListObject.optInt("speed");
-				String formattedDate = convertDate(unixTimeStamp);
-				//"temperature" object 
-				JSONObject tempJsonObject = childListObject.optJSONObject("temp");
-				double dayTemp = tempJsonObject.optDouble("day");
-				double nightTemp = tempJsonObject.optDouble("night");
-				double eveningTemp = tempJsonObject.optDouble("eve");
-				double morningTemp = tempJsonObject.optDouble("morn");
+				JSONArray listOfRecordsJsonArray = mainJsonObject.optJSONArray("list");
+				int length = listOfRecordsJsonArray.length();
+				for(int i=0;i<length;i++){
+					weatherInfo = new WeatherInfo();
+					weatherInfo.setCityName(cityName);
+					weatherInfo.setLongitude(longitude);
+					weatherInfo.setLattitude(lattitude);
+					//"list" child object
+					JSONObject childListObject = listOfRecordsJsonArray.getJSONObject(i);
+					long unixTimeStamp = childListObject.optLong("dt");
+					double pressure = childListObject.optDouble("pressure");
+					int	humidity = childListObject.optInt("humidity");
+					int	windSpeed = childListObject.optInt("speed");
+					String formattedDate = convertDate(unixTimeStamp);
+					//"temperature" object 
+					JSONObject tempJsonObject = childListObject.optJSONObject("temp");
+					double dayTemp = tempJsonObject.optDouble("day");
+					double nightTemp = tempJsonObject.optDouble("night");
+					double eveningTemp = tempJsonObject.optDouble("eve");
+					double morningTemp = tempJsonObject.optDouble("morn");
 
-				weatherInfo.setPressure(pressure);
-				weatherInfo.setHumidity(humidity);
-				weatherInfo.setWindSpeed(windSpeed);
-				weatherInfo.setDate(formattedDate);
-				weatherInfo.setDayTemp(dayTemp);
-				weatherInfo.setNightTemp(nightTemp);
-				weatherInfo.setEveningTemp(eveningTemp);
-				weatherInfo.setMorningTemp(morningTemp);
+					weatherInfo.setPressure(pressure);
+					weatherInfo.setHumidity(humidity);
+					weatherInfo.setWindSpeed(windSpeed);
+					weatherInfo.setDate(formattedDate);
+					weatherInfo.setDayTemp(dayTemp);
+					weatherInfo.setNightTemp(nightTemp);
+					weatherInfo.setEveningTemp(eveningTemp);
+					weatherInfo.setMorningTemp(morningTemp);
 
-				//"weather" array from "list" object
-				JSONArray weatherJsonArray = childListObject.optJSONArray("weather");
-				int weatherId = 0;
-				String weatherMainStatus ="";
-				String weatherIcon ="";
-				String weatherStatusDescription =""; 
-				int weatherLenghtArray = weatherJsonArray.length();
-				for(int j=0;j<weatherLenghtArray;j++){
-					JSONObject childWeatherObject = weatherJsonArray.getJSONObject(j);
-					weatherId = childWeatherObject.optInt("id");
-					weatherMainStatus = childWeatherObject.optString("main");
-					weatherStatusDescription = childWeatherObject.optString("description");
-					weatherIcon = childWeatherObject.optString("icon");
+					//"weather" array from "list" object
+					JSONArray weatherJsonArray = childListObject.optJSONArray("weather");
+					int weatherId = 0;
+					String weatherMainStatus ="";
+					String weatherIcon ="";
+					String weatherStatusDescription =""; 
+					int weatherLenghtArray = weatherJsonArray.length();
+					for(int j=0;j<weatherLenghtArray;j++){
+						JSONObject childWeatherObject = weatherJsonArray.getJSONObject(j);
+						weatherId = childWeatherObject.optInt("id");
+						weatherMainStatus = childWeatherObject.optString("main");
+						weatherStatusDescription = childWeatherObject.optString("description");
+						weatherIcon = childWeatherObject.optString("icon");
 
-					weatherInfo.setWeatherStatus(weatherMainStatus);
-					weatherInfo.setWeatherStatusDescription(weatherStatusDescription);
-					weatherInfo.setIconName(weatherIcon);
-					String imageUrl = "http://openweathermap.org/img/w/"+weatherIcon+".png";
-					String imagePath = downloadImage(imageUrl);
-					weatherInfo.setWeatherImagePath(imagePath);
-					weatherInfoArrayList.add(weatherInfo);
+						weatherInfo.setWeatherStatus(weatherMainStatus);
+						weatherInfo.setWeatherStatusDescription(weatherStatusDescription);
+						weatherInfo.setIconName(weatherIcon);
+						String imageUrl = "http://openweathermap.org/img/w/"+weatherIcon+".png";
+						String imagePath = downloadImage(imageUrl);
+						weatherInfo.setWeatherImagePath(imagePath);
+						weatherInfoArrayList.add(weatherInfo);
+					}
 				}
+				listener.setweatherData(weatherInfoArrayList,responseCode);
+			}else if (responseCode.equals("404")){
+				listener.setweatherData(weatherInfoArrayList,responseCode);
 			}
-			listener.setweatherData(weatherInfoArrayList);
 		} catch (JSONException e) {
 			e.printStackTrace();
 		}
